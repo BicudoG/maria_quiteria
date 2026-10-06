@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2888567195358286398}
   - component: {fileID: 3247503361904139914}
   m_Layer: 0
-  m_Name: Camera
+  m_Name: Camera_main
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -188,6 +188,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
       propertyPath: m_Name
       value: Maria_quiteria_Civil 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+      propertyPath: m_TagString
+      value: Maria_quiteria_Civil
       objectReference: {fileID: 0}
     - target: {fileID: 5074512353664290214, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'

@@ -9,7 +9,11 @@ public class Manager : MonoBehaviour
         Instantiate(maria, inicio.position, inicio.rotation);
     }
 
-    // Update is called once per frame
+    private void OnTriggerEnter(Collider other)
+    {
+        string tagDoObjeto = other.tag;
+        Debug.Log("A tag do objeto é: " + tagDoObjeto);
+    }
     void Update()
     {
         
