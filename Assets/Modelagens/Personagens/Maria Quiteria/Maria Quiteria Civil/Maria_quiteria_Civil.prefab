@@ -8,56 +8,56 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4542805624159933926, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
+      propertyPath: rotationSpeed
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalPosition.x
       value: 3.215823
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalPosition.z
       value: -8.962687
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 4999237894086498898, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+    - target: {fileID: 5632609830108840168, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: m_Name
       value: Maria_quiteria_Civil
       objectReference: {fileID: 0}
-    - target: {fileID: 5074512353664290214, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 2390e514d2f039848b6fa48699b1586b, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
