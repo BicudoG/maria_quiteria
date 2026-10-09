@@ -13,6 +13,9 @@ TagManager:
   - Mapa_trigger
   - missao_triger
   - missao
+  - Pai
+  - Fundo_preto
+  - Texto
   layers:
   - Default
   - TransparentFX

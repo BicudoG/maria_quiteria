@@ -231,6 +231,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e50d051e6ea37bc4ca352330f611c940, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rotationOffset: {x: 90, y: 0, z: 0}
 --- !u!1001 &4821777529873366457
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -314,6 +315,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7462735544736375873}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4389107628032745758}
   m_SourcePrefab: {fileID: 100100000, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
 --- !u!4 &4999237894086498898 stripped
 Transform:
@@ -382,3 +386,29 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1.12, z: 0}
+--- !u!114 &-4389107628032745758
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5632609830108840168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be3d2dec323ec614da1db0e59866c396, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  distanciaDoRaio: 4.46
+  tempoEntreFalas: 10
+  falasMissao:
+  - "Que \xE9 isso que dizes, menina?! Tu est\xE1s louca? Mulher n\xE3o pega em armas!
+    Isso \xE9 coisa de homem!"
+  - "Cala a boca, Maria! N\xE3o digas mais essas doidices! Queres desonrar o nome
+    da fam\xEDlia? Queres que te matem ou pior?"
+  - "N\xE3o permito! Enquanto eu for vivo, nenhuma filha minha vai se meter em guerra.
+    Fica em casa e esquece essa ideia de uma vez!"
+  - "Basta! J\xE1 ouvi o suficiente dessa loucura! Vai agora mesmo para o teu quarto
+    e n\xE3o saias dali at\xE9 eu mandar! E que n\xE3o me venhas mais com essas ideias
+    de mulher guerreira, ouvi?"
+  falasGenericas: []
+  conversaAliado: 
