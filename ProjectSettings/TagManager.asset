@@ -12,6 +12,7 @@ TagManager:
   - Maria_incompleta
   - Mapa_trigger
   - missao_triger
+  - missao
   layers:
   - Default
   - TransparentFX

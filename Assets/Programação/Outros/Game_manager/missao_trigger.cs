@@ -3,6 +3,9 @@ using UnityEngine;
 
 public class MissaoTrigger : MonoBehaviour
 {
+    public GameObject missao2;
+    private sistema_Animacao animacaoMaria;
+    private Animator animatorMaria;
     [Header("Cameras")]
     public Camera cameraPrincipal;
     public Camera cameraSecundaria;
@@ -23,6 +26,9 @@ public class MissaoTrigger : MonoBehaviour
     private Rigidbody rbMaria;
     private CharacterController ccMaria;
 
+    [Header("Ao Finalizar a Conversa")]
+    public UnityEngine.Events.UnityEvent onDialogoFinalizado;   // Evento que você pode configurar no Inspector
+    [SerializeField] private MonoBehaviour scriptParaAtivar;   // Arraste o script que quer ativar
     private void Start()
     {
         // Só busca a Main Camera se não foi arrastada no Inspector
@@ -47,8 +53,10 @@ public class MissaoTrigger : MonoBehaviour
     {
         if (!fala) return;
 
-        // unscaledDeltaTime funciona mesmo se o jogo estiver pausado (timeScale = 0)
-        falaTime += Time.unscaledDeltaTime;
+        // Continua forçando a animação de parado todo frame
+        ForcarAnimacaoParado();
+
+        falaTime += Time.deltaTime;
 
         if (falaTime >= tempoEntreFalas)
         {
@@ -56,9 +64,14 @@ public class MissaoTrigger : MonoBehaviour
             conversa++;
 
             if (conversa >= falas.Length)
+            {
                 FinalizarDialogo();
-            else if (texto != null)
-                texto.text = falas[conversa];
+            }
+            else
+            {
+                if (texto != null)
+                    texto.text = falas[conversa];
+            }
         }
     }
 
@@ -97,17 +110,34 @@ public class MissaoTrigger : MonoBehaviour
 
         if (texto != null && falas.Length > 0)
             texto.text = falas[0];
+
+        animacaoMaria = other.GetComponent<sistema_Animacao>();
+        animatorMaria = other.GetComponent<Animator>();
+
+        // Desativa o sistema de animação
+        if (animacaoMaria != null)
+            animacaoMaria.enabled = false;
+
+        // Força parado imediatamente
+        ForcarAnimacaoParado();
     }
 
     private void FinalizarDialogo()
     {
         fala = false;
 
+        // Fecha o diálogo
         if (dialogoBox != null)
             dialogoBox.SetActive(false);
 
-        TrocarCamera(false);
+        // Volta as câmeras
+        if (cameraSecundaria != null)
+            cameraSecundaria.enabled = false;
 
+        if (cameraPrincipal != null)
+            cameraPrincipal.enabled = true;
+
+        // Reativa o movimento da Maria
         if (maria != null)
             maria.enabled = true;
 
@@ -117,8 +147,22 @@ public class MissaoTrigger : MonoBehaviour
         if (ccMaria != null)
             ccMaria.enabled = true;
 
-        Debug.Log("Diálogo finalizado! Movimento restaurado.");
+        // ===== NOVIDADES =====
 
+        // 1. Ativa o evento (você configura no Inspector o que acontece)
+        onDialogoFinalizado?.Invoke();
+
+        // 2. Ativa outro script
+        if (scriptParaAtivar != null)
+            scriptParaAtivar.enabled = true;
+
+        Debug.Log("Diálogo finalizado! Movimento restaurado + evento e script ativados.");
+
+        // Reativa o sistema de animação
+        if (animacaoMaria != null)
+            animacaoMaria.enabled = true;
+        missao2.SetActive(true);
+        // Destrói o trigger
         Destroy(gameObject);
     }
 
@@ -147,5 +191,17 @@ public class MissaoTrigger : MonoBehaviour
         var listener = cam.GetComponent<AudioListener>();
         if (listener != null)
             listener.enabled = ativa;
+                
+    }
+    private void ForcarAnimacaoParado()
+    {
+        if (animatorMaria != null)
+        {
+
+
+
+            // Força o Animator a ir para o estado Idle (troque "Idle" pelo nome real do seu estado parado)
+            animatorMaria.Play("Parado", 0, 0f);
+        }
     }
 }
