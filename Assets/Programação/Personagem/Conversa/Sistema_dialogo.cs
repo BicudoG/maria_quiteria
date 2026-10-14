@@ -1,5 +1,6 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Sistema_dialogo : MonoBehaviour
 {
@@ -22,7 +23,7 @@ public class Sistema_dialogo : MonoBehaviour
     // Encontrados automaticamente
     private GameObject fundoBranco;
     private TextMeshProUGUI texto;
-
+    public Manager1 Manager1;
     // Controle interno
     private int conversa = 0;
     private float falaTime = 0f;
@@ -101,6 +102,8 @@ public class Sistema_dialogo : MonoBehaviour
             // Pai / Missão → sequência
             else if (hit.collider.CompareTag("Pai"))
             {
+                IniciarDialogoMissao();
+            }else if(hit.collider.CompareTag("missao")){
                 IniciarDialogoMissao();
             }
             else
@@ -188,6 +191,10 @@ public class Sistema_dialogo : MonoBehaviour
         // Se era diálogo de missão, destroi o objeto com a tag "missao"
         if (eraMissao)
         {
+            if(Manager1 != null)
+            {
+                SceneManager.LoadScene("Tuturial");
+            }
             GameObject objetoMissao = GameObject.FindWithTag("missao");
             if (objetoMissao != null)
             {
