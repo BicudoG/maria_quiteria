@@ -1,140 +1,216 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
+using UnityEngine.AI;
+using System.Collections;
 
+[RequireComponent(typeof(NavMeshAgent))]
 public class Pai_IA : MonoBehaviour
 {
-    [Header("Movimento")]
-    public float velocidadeNormal = 2f;
-    public float velocidadePerseguicao = 4.5f;
-    public float tempoEntrePontos = 3f;          // Tempo parado entre um ponto e outro
-    public float raioPatrulha = 10f;             // AtÈ onde ele pode escolher pontos aleatÛrios
+    [Header("Refer√™ncias")]
+    public Transform player;                    // Arraste o Player aqui
+    public Transform[] patrolPoints;            // Pontos de patrulha
 
-    [Header("Vis„o (sÛ na frente)")]
-    public float distanciaVisao = 12f;
-    public float anguloVisao = 60f;              // ¬ngulo total de vis„o (30∞ para cada lado)
-    public LayerMask layerJogador;              // Layer do jogador
-    public Transform jogador;                   // Arraste a Maria aqui
+    [Header("Campo de Vis√£o")]
+    [Range(1, 180)]
+    public float fieldOfView = 45f;             // 45 graus
+    public float viewDistance = 15f;            // Dist√¢ncia m√°xima de vis√£o
+    public LayerMask obstacleMask;              // Layer dos obst√°culos (paredes, etc)
+    public LayerMask playerMask;                // Layer do player
 
-    [Header("Estados")]
-    public bool perseguindo = false;
+    [Header("Configura√ß√µes")]
+    public float patrolSpeed = 3.5f;
+    public float chaseSpeed = 6f;
+    public float waitTimeAtPoint = 1.5f;        // Tempo parado em cada ponto
+    public float loseSightTime = 3f;            // Tempo para perder o player se n√£o o ver
 
-    // Interno
-    private Vector3 pontoAtual;
-    private float tempoEspera;
-    private bool esperando = false;
+   // Adicione esta vari√°vel na classe
+    private bool isWalking = false;
+    public bool anda;
+    public NPC_Animacao scriptAnimacao;
+    // Estados internos
+    private NavMeshAgent agent;
+    private enum State { Idle, Patrol, Chase }
+    private State currentState = State.Idle;
 
-    private void Start()
+    private int currentPatrolIndex = 0;
+    private bool isWaiting = false;
+    private float timeSinceLastSeen = 0f;
+    private bool canSeePlayer = false;
+
+    // Sinais p√∫blicos (chame esses m√©todos de outros scripts)
+    public void ActivatePatrol()
     {
-        EscolherNovoPonto();
+        if (currentState == State.Chase) return; // n√£o interrompe persegui√ß√£o
+
+        currentState = State.Patrol;
+        agent.speed = patrolSpeed;
+        agent.isStopped = false;
+        GoToNextPatrolPoint();
+        Debug.Log("Patrulha ativada");
     }
 
-    private void Update()
+    public void ActivateChase()
     {
-        DetectarJogador();
+        currentState = State.Chase;
+        agent.speed = chaseSpeed;
+        agent.isStopped = false;
+        timeSinceLastSeen = 0f;
+        Debug.Log("Persegui√ß√£o ativada");
+    }
 
-        if (perseguindo)
+    public void StopAll()
+    {
+        currentState = State.Idle;
+        agent.isStopped = true;
+        Debug.Log("IA parada");
+    }
+
+    void Start()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        agent.speed = patrolSpeed;
+        scriptAnimacao = GetComponent<NPC_Animacao>();
+        if (player == null)
+            player = GameObject.FindGameObjectWithTag("Maria_quiteria_Civil")?.transform;
+    }
+
+ 
+
+    void Update()
+    {
+        canSeePlayer = CheckFieldOfView();
+
+        if (scriptAnimacao != null)
         {
-            Perseguir();
+            // Histerese para evitar o liga/desliga constante
+            float speed = agent.velocity.magnitude;
+
+            if (speed > 0.25f)                 // s√≥ liga se estiver realmente andando
+                isWalking = true;
+            else if (speed < 0.08f)             // s√≥ desliga quando estiver quase parado
+                isWalking = false;
+
+            // For√ßa desligar quando o agent estiver parado de prop√≥sito
+            if (agent.isStopped)
+                isWalking = false;
+
+            scriptAnimacao.anda = isWalking;
+        }
+
+        switch (currentState)
+        {
+            case State.Idle:
+                break;
+            case State.Patrol:
+                HandlePatrol();
+                if (canSeePlayer)
+                {
+                    ActivateChase();
+                }
+                break;
+            case State.Chase:
+                HandleChase();
+                break;
+        }
+    }
+
+    // ==================== SISTEMA DE PATRULHA ====================
+    void HandlePatrol()
+    {
+        if (isWaiting) return;
+
+        if (!agent.pathPending && agent.remainingDistance < 0.5f)
+        {
+            StartCoroutine(WaitAndGoNext());
+        }
+    }
+
+    IEnumerator WaitAndGoNext()
+    {
+        isWaiting = true;
+        agent.isStopped = true;
+
+        yield return new WaitForSeconds(waitTimeAtPoint);
+
+        agent.isStopped = false;
+        GoToNextPatrolPoint();
+        isWaiting = false;
+    }
+
+    void GoToNextPatrolPoint()
+    {
+        if (patrolPoints == null || patrolPoints.Length == 0) return;
+
+        agent.SetDestination(patrolPoints[currentPatrolIndex].position);
+        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+    }
+
+    // ==================== SISTEMA DE PERSEGUI√á√ÉO ====================
+    void HandleChase()
+    {
+        if (player == null) return;
+
+        agent.SetDestination(player.position);
+
+        if (canSeePlayer)
+        {
+            timeSinceLastSeen = 0f;
         }
         else
         {
-            Patrulhar();
-        }
-    }
+            timeSinceLastSeen += Time.deltaTime;
 
-    // ===================== PATRULHA =====================
-    private void Patrulhar()
-    {
-        if (esperando)
-        {
-            tempoEspera -= Time.deltaTime;
-            if (tempoEspera <= 0f)
+            // Se perder o player por muito tempo, volta para patrulha
+            if (timeSinceLastSeen >= loseSightTime)
             {
-                esperando = false;
-                EscolherNovoPonto();
-            }
-            return;
-        }
-
-        // Move em direÁ„o ao ponto
-        transform.position = Vector3.MoveTowards(transform.position, pontoAtual, velocidadeNormal * Time.deltaTime);
-
-        // Olha para o ponto
-        Vector3 direcao = (pontoAtual - transform.position).normalized;
-        if (direcao != Vector3.zero)
-        {
-            Quaternion rotacao = Quaternion.LookRotation(direcao);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotacao, 5f * Time.deltaTime);
-        }
-
-        // Chegou no ponto?
-        if (Vector3.Distance(transform.position, pontoAtual) < 0.3f)
-        {
-            esperando = true;
-            tempoEspera = tempoEntrePontos;
-        }
-    }
-
-    private void EscolherNovoPonto()
-    {
-        Vector2 pontoAleatorio = Random.insideUnitCircle * raioPatrulha;
-        pontoAtual = new Vector3(transform.position.x + pontoAleatorio.x, transform.position.y, transform.position.z + pontoAleatorio.y);
-    }
-
-    // ===================== PERSEGUI«√O =====================
-    private void Perseguir()
-    {
-        if (jogador == null) return;
-
-        transform.position = Vector3.MoveTowards(transform.position, jogador.position, velocidadePerseguicao * Time.deltaTime);
-
-        // Olha para o jogador
-        Vector3 direcao = (jogador.position - transform.position).normalized;
-        direcao.y = 0;
-        if (direcao != Vector3.zero)
-        {
-            Quaternion rotacao = Quaternion.LookRotation(direcao);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotacao, 8f * Time.deltaTime);
-        }
-    }
-
-    // ===================== VIS√O S” NA FRENTE =====================
-    private void DetectarJogador()
-    {
-        if (jogador == null) return;
-
-        Vector3 direcaoParaJogador = (jogador.position - transform.position).normalized;
-        float angulo = Vector3.Angle(transform.forward, direcaoParaJogador);
-
-        // SÛ detecta se estiver dentro do ‚ngulo de vis„o e da dist‚ncia
-        if (angulo < anguloVisao / 2f && Vector3.Distance(transform.position, jogador.position) <= distanciaVisao)
-        {
-            // Raycast para n„o ver atravÈs de paredes
-            if (Physics.Raycast(transform.position + Vector3.up * 1.2f, direcaoParaJogador, out RaycastHit hit, distanciaVisao))
-            {
-                if (hit.transform == jogador || hit.transform.CompareTag("Maria_quiteria_Civil"))
-                {
-                    perseguindo = true;
-                    return;
-                }
+                ActivatePatrol();
             }
         }
-
-        // Se perdeu de vista por um tempo, volta a patrulhar (opcional)
-        // perseguindo = false;
     }
 
-    // Desenha a vis„o no Editor (sÛ para debug)
-    private void OnDrawGizmosSelected()
+    // ==================== CAMPO DE VIS√ÉO 45¬∞ ====================
+    bool CheckFieldOfView()
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, raioPatrulha);
+        if (player == null) return false;
 
-        Gizmos.color = Color.red;
-        Vector3 direita = Quaternion.Euler(0, anguloVisao / 2f, 0) * transform.forward * distanciaVisao;
-        Vector3 esquerda = Quaternion.Euler(0, -anguloVisao / 2f, 0) * transform.forward * distanciaVisao;
+        Vector3 directionToPlayer = player.position - transform.position;
+        float distance = directionToPlayer.magnitude;
 
-        Gizmos.DrawLine(transform.position, transform.position + direita);
-        Gizmos.DrawLine(transform.position, transform.position + esquerda);
-        Gizmos.DrawLine(transform.position + direita, transform.position + esquerda);
+        if (distance > viewDistance) return false;
+
+        // √Çngulo entre a frente do inimigo e o player
+        float angle = Vector3.Angle(transform.forward, directionToPlayer);
+
+        if (angle > fieldOfView * 0.5f) return false; // 45¬∞ ‚Üí ¬±22.5¬∞
+
+        // Raycast para ver se tem obst√°culo no meio
+        if (Physics.Raycast(transform.position + Vector3.up * 1.2f,
+                            directionToPlayer.normalized,
+                            distance,
+                            obstacleMask))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    // ==================== DEBUG VISUAL ====================
+    void OnDrawGizmosSelected()
+    {
+        // Desenha o cone de vis√£o
+        Gizmos.color = canSeePlayer ? Color.red : Color.yellow;
+
+        Vector3 leftBoundary = Quaternion.Euler(0, -fieldOfView * 0.5f, 0) * transform.forward;
+        Vector3 rightBoundary = Quaternion.Euler(0, fieldOfView * 0.5f, 0) * transform.forward;
+
+        Gizmos.DrawRay(transform.position, leftBoundary * viewDistance);
+        Gizmos.DrawRay(transform.position, rightBoundary * viewDistance);
+        Gizmos.DrawRay(transform.position, transform.forward * viewDistance);
+
+        // Arco do FOV
+#if UNITY_EDITOR
+        UnityEditor.Handles.color = canSeePlayer ? Color.red : Color.yellow;
+        UnityEditor.Handles.DrawWireArc(transform.position, Vector3.up, leftBoundary, fieldOfView, viewDistance);
+#endif
     }
 }

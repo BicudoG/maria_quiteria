@@ -11,7 +11,10 @@ public class NPC_Animacao : MonoBehaviour
     public bool atirou;
 
     [Header("Detecção de Movimento")]
-    public float limiarMovimento = 0.001f;
+    public float limiarLigar = 0.02f;      // quanto precisa andar para ligar
+    public float limiarDesligar = 0.005f;  // quanto precisa parar para desligar
+
+    private bool isWalking = false;
 
     void Start()
     {
@@ -27,8 +30,18 @@ public class NPC_Animacao : MonoBehaviour
 
         Vector3 deslocamento = transform.position - posicaoAnterior;
         deslocamento.y = 0f;
+        float distancia = deslocamento.magnitude;
 
-        anda = deslocamento.sqrMagnitude > limiarMovimento * limiarMovimento;
+        // Histerese para evitar flicker
+        if (distancia > limiarLigar)
+            isWalking = true;
+        else if (distancia < limiarDesligar)
+            isWalking = false;
+
+        anda = isWalking;
+
+        // === ESTA LINHA É A QUE FALTAVA ===
+        animator.SetBool("anda", anda);
 
         posicaoAnterior = transform.position;
     }
