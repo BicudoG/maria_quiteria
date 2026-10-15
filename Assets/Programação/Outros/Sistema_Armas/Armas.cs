@@ -1,172 +1,221 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Armas : MonoBehaviour
 {
-    [SerializeField] bool[] armaAtual;
-    [SerializeField] bool npc;
-    [SerializeField] float alcance;
-    [SerializeField] float anguloVisao = 45f;
-    [SerializeField] Transform fonte;
-    [SerializeField] Transform[] fonteMosquete;
-    [SerializeField] GameObject bomba;
-    [SerializeField] Collider[] alvosNoRaio;
+    [Header("Configuração de Armas")]
+    [SerializeField] private bool[] armaAtual = new bool[3]; // 0 = Mosquete, 1 = Blunderbuss, 2 = Hand Mortar
+    [SerializeField] private bool npc;
 
-    // Vari�vel que as IAs usam para saber se o tiro pode ou n�o ser efetuado
-    [HideInInspector] public bool jaAtacou;
+    [Header("Alcance e Visão")]
+    [SerializeField] private float alcance = 55f;
+    [SerializeField] private float anguloVisao = 45f;
+
+    [Header("Referências")]
+    [SerializeField] private Transform fonte;
+    [SerializeField] private Transform[] fonteMosquete;
+    [SerializeField] private GameObject bomba;
+    [SerializeField] private sistema_Animacao anima;
+
+    [Header("Configurações de Ataque")]
     public float forcaDoArremesso = 10f;
+    [SerializeField] private float tempoEntreDisparos = 1.5f; // Tempo de espera para jogador e NPC
+
+    // Usado pelas IAs e pelo próprio script
+    [HideInInspector] public bool jaAtacou;
+
+    private float tempoProximoAtaque;
 
     private void Awake()
     {
-        
+        if (anima == null)
+            anima = GetComponent<sistema_Animacao>();
+
+        // Garante que o array tenha 3 posições
         if (armaAtual == null || armaAtual.Length < 3)
-        {
             armaAtual = new bool[3];
-        }
 
         if (npc)
         {
-            
+            // NPC escolhe uma arma aleatória
             int indiceAleatorio = Random.Range(0, armaAtual.Length);
             DefinirArmaAtiva(indiceAleatorio);
         }
         else
         {
-
+            // Jogador começa com a primeira arma se nenhuma estiver marcada
             if (!armaAtual[0] && !armaAtual[1] && !armaAtual[2])
-            {
                 DefinirArmaAtiva(0);
-            }
         }
     }
-    private void DefinirArmaAtiva(int indiceParaAtivar)
-    {
-        for (int i = 0; i < armaAtual.Length; i++)
-        {
-            armaAtual[i] = (i == indiceParaAtivar);
-        }
-    }
-
 
     private void Update()
     {
-        // LOGICA DO JOGADOR
+
+    
+        if (Time.time < tempoProximoAtaque) return;
+
         if (!npc)
         {
-            // S� permite clicar se n�o tiver atacado ou se o tempo de espera acabou
+            // === LÓGICA DO JOGADOR ===
             if (Input.GetMouseButtonDown(0) && !jaAtacou)
             {
-                jaAtacou = true; // Trava o clique do jogador temporariamente
-                Atacar();
-
-                // Define o tempo de espera do jogador antes do pr�ximo clique (Ex: 1.5 segundos)
-                // Voc� pode substituir 1.5f por uma vari�vel p�blica se preferir
-                Invoke(nameof(ResetDisparoJogador), 1.5f);
+                RealizarAtaque();
             }
         }
-        // LOGICA DO NPC
-        else if (npc && !jaAtacou)
+        else
         {
-            jaAtacou = true; // Impede o loop infinito do NPC no pr�ximo frame
-            Atacar();
+            // === LÓGICA DO NPC ===
+            // O NPC ataca sempre que o tempo permitir
+            RealizarAtaque();
         }
     }
 
-    // Nova fun��o para limpar a trava do jogador
-    private void ResetDisparoJogador()
+    private void RealizarAtaque()
+    {
+        jaAtacou = true;
+        tempoProximoAtaque = Time.time + tempoEntreDisparos;
+
+        if (anima != null)
+            anima.atirou = true;
+
+        Atacar();
+
+        // Libera a trava depois do tempo configurado
+        Invoke(nameof(ResetDisparo), tempoEntreDisparos);
+    }
+
+    private void ResetDisparo()
     {
         jaAtacou = false;
+    }
+
+    private void DefinirArmaAtiva(int indice)
+    {
+        for (int i = 0; i < armaAtual.Length; i++)
+            armaAtual[i] = (i == indice);
     }
 
     private void Atacar()
     {
         if (armaAtual == null || armaAtual.Length < 3) return;
 
-        if (armaAtual[0] && !armaAtual[1] && !armaAtual[2]) Mosquete();
-        if (!armaAtual[0] && armaAtual[1] && !armaAtual[2]) Blunderbuss();
-        if (!armaAtual[0] && !armaAtual[1] && armaAtual[2]) handmortar();
+        if (armaAtual[0]) Mosquete();
+        else if (armaAtual[1]) Blunderbuss();
+        else if (armaAtual[2]) HandMortar();
     }
 
-    void Mosquete()
+    // ==================== ARMAS ====================
+
+    private void Mosquete()
     {
-        alcance = 15f;
+        alcance = 55f;
+
         if (fonteMosquete == null || fonteMosquete.Length == 0) return;
 
-        int indiceAleatorio = Random.Range(0, fonteMosquete.Length);
-        Transform puntoAtual = fonteMosquete[indiceAleatorio];
+        Transform pontoAtual = fonteMosquete[Random.Range(0, fonteMosquete.Length)];
 
-        RaycastHit hit;
-        if (Physics.Raycast(puntoAtual.position, puntoAtual.forward, out hit, alcance))
+        // Usa a direção do personagem em vez da rotação do ponto
+        Vector3 direcao = transform.forward;
+
+        if (Physics.Raycast(pontoAtual.position, direcao, out RaycastHit hit, alcance))
         {
-            Sistema_Vida vidaAlvo = hit.transform.GetComponent<Sistema_Vida>();
-            if (vidaAlvo != null)
-            {
-                if (hit.collider.CompareTag("Inimigo") || hit.collider.CompareTag("NPC_Aliado"))
-                {
-                    vidaAlvo.Vida -= 20;
-                }
-                else if (gameObject.CompareTag("Inimigo") && hit.collider.CompareTag("Maria_incompleta"))
-                {
-                    vidaAlvo.Vida -= 20;
-                }
-            }
+            AplicarDano(hit.collider);
         }
-        Debug.DrawRay(puntoAtual.position, puntoAtual.forward * alcance, Color.red, 1f);
+
+        Debug.DrawRay(pontoAtual.position, direcao * alcance, Color.red, 1f);
     }
-    void Blunderbuss()
+
+
+
+
+
+    private void Blunderbuss()
     {
         alcance = 5f;
+
         if (fonte == null) return;
 
-        alvosNoRaio = Physics.OverlapSphere(fonte.position, alcance);
-        foreach (var colisor in alvosNoRaio)
+        Collider[] alvos = Physics.OverlapSphere(fonte.position, alcance);
+
+        foreach (var colisor in alvos)
         {
-            if (colisor.gameObject == gameObject || colisor.transform == fonte) continue;
+            if (colisor.gameObject == gameObject) continue;
 
             Vector3 direcaoParaAlvo = (colisor.transform.position - fonte.position).normalized;
             float angulo = Vector3.Angle(fonte.forward, direcaoParaAlvo);
 
-            if (angulo < anguloVisao / 2f)
+            if (angulo < anguloVisao * 0.5f)
             {
-                Sistema_Vida vidaAlvo = colisor.GetComponent<Sistema_Vida>();
-                if (vidaAlvo != null)
-                {
-                    if (!npc || gameObject.CompareTag("NPC_Aliado"))
-                    {
-                        if (colisor.CompareTag("Inimigo") || colisor.CompareTag("Maria_incompleta"))
-                        {
-                            vidaAlvo.Vida -= 20;
-                        }
-                    }
-
-                    else if (gameObject.CompareTag("Inimigo"))
-                    {
-                        if (colisor.CompareTag("Player") || colisor.CompareTag("NPC_Aliado"))
-                        {
-                            vidaAlvo.Vida -= 20;
-                        }
-                    }
-                }
+                AplicarDano(colisor);
             }
         }
     }
 
-
-    void handmortar()
+    private void HandMortar()
     {
         if (fonteMosquete == null || fonteMosquete.Length == 0 || bomba == null) return;
 
         GameObject novaBomba = Instantiate(bomba, fonteMosquete[0].position, fonteMosquete[0].rotation);
         Rigidbody rb = novaBomba.GetComponent<Rigidbody>();
+
         if (rb != null)
         {
-            Vector3 direcaoForca = fonteMosquete[0].forward + Vector3.up * 0.5f;
-            rb.AddForce(direcaoForca * forcaDoArremesso, ForceMode.Impulse);
+            Vector3 direcao = fonteMosquete[0].forward + Vector3.up * 0.5f;
+            rb.AddForce(direcao * forcaDoArremesso, ForceMode.Impulse);
         }
     }
 
-    void OnDrawGizmos()
+    // ==================== DANO ====================
+
+    private void AplicarDano(Collider colisor)
+    {
+        // Tenta achar o script no próprio objeto ou no pai
+        Sistema_Vida vidaAlvo = colisor.GetComponent<Sistema_Vida>();
+        if (vidaAlvo == null)
+            vidaAlvo = colisor.GetComponentInParent<Sistema_Vida>();
+
+        if (vidaAlvo == null)
+        {
+            Debug.LogWarning("Objeto " + colisor.name + " não tem Sistema_Vida");
+            return;
+        }
+
+        // Jogador ou NPC Aliado causando dano
+        if (!npc || gameObject.CompareTag("NPC_Aliado"))
+        {
+            if (colisor.CompareTag("Inimigo") || colisor.CompareTag("Maria_incompleta"))
+            {
+                vidaAlvo.Vida -= 20;
+                Debug.Log("Dano aplicado! Vida restante: " + vidaAlvo.Vida);
+            }
+            else
+            {
+                Debug.Log("Tag do alvo não é Inimigo nem Maria_incompleta → " + colisor.tag);
+            }
+        }
+        // Inimigo causando dano
+        else if (gameObject.CompareTag("Inimigo"))
+        {
+            if (colisor.CompareTag("Player") || colisor.CompareTag("NPC_Aliado") || colisor.CompareTag("Maria_incompleta"))
+            {
+                vidaAlvo.Vida -= 20;
+                Debug.Log("Dano aplicado pelo inimigo! Vida restante: " + vidaAlvo.Vida);
+            }
+            else
+            {
+                Debug.Log("Tag do alvo não é válida para inimigo → " + colisor.tag);
+            }
+        }
+        else
+        {
+            Debug.Log("Quem atirou não tem tag correta. Tag atual: " + gameObject.tag);
+        }
+    }
+
+    private void OnDrawGizmosSelected()
     {
         if (fonte == null) return;
+
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(fonte.position, alcance);
     }

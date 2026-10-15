@@ -673,7 +673,7 @@ CapsuleCollider:
   m_Height: 2.41
   m_Direction: 1
   m_Center: {x: 0, y: 0.99, z: 0}
---- !u!114 &198274626
+--- !u!114 &198274624
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -682,7 +682,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 198274620}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f1a24423def3c24a9875839a11ef442, type: 3}
+  m_Script: {fileID: 11500000, guid: 01247b2d474a5c84b91cf7695c44871d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &200873113
@@ -1251,11 +1251,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 964be605b7bb65448a3e4359745b5e0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
   npc: 1
+  militar: 0
   anda: 0
   andaArma: 0
   mirar: 0
   atirou: 0
+  arma: 0
+  duracaoTiro: 1
 --- !u!1001 &419585132
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1721,11 +1725,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 964be605b7bb65448a3e4359745b5e0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
   npc: 1
+  militar: 0
   anda: 0
   andaArma: 0
   mirar: 0
   atirou: 0
+  arma: 0
+  duracaoTiro: 1
 --- !u!1001 &615701546
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3673,11 +3681,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 964be605b7bb65448a3e4359745b5e0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
   npc: 1
+  militar: 0
   anda: 0
   andaArma: 0
   mirar: 0
   atirou: 0
+  arma: 0
+  duracaoTiro: 1
 --- !u!1001 &981437320
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4199,11 +4211,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 964be605b7bb65448a3e4359745b5e0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
   npc: 1
+  militar: 0
   anda: 0
   andaArma: 0
   mirar: 0
   atirou: 0
+  arma: 0
+  duracaoTiro: 1
 --- !u!1001 &1121700118
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4595,11 +4611,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 964be605b7bb65448a3e4359745b5e0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
   npc: 1
+  militar: 0
   anda: 0
   andaArma: 0
   mirar: 0
   atirou: 0
+  arma: 0
+  duracaoTiro: 1
 --- !u!1001 &1202352123
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5005,7 +5025,7 @@ PrefabInstance:
     - target: {fileID: -4389107628032745758, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: Manager1
       value: 
-      objectReference: {fileID: 198274626}
+      objectReference: {fileID: 0}
     - target: {fileID: -4389107628032745758, guid: 1fa2d55928a98b44aa47f9b6b91dde01, type: 3}
       propertyPath: falasGenericas.Array.size
       value: 10
@@ -6828,7 +6848,7 @@ PrefabInstance:
       addedObject: {fileID: 198274623}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: ad75a4935e01aa84f898e2cc3720ab1e, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 198274626}
+      addedObject: {fileID: 198274624}
   m_SourcePrefab: {fileID: 100100000, guid: ad75a4935e01aa84f898e2cc3720ab1e, type: 3}
 --- !u!1 &1685369143 stripped
 GameObject:
@@ -6895,11 +6915,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 964be605b7bb65448a3e4359745b5e0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
   npc: 1
+  militar: 0
   anda: 0
   andaArma: 0
   mirar: 0
   atirou: 0
+  arma: 0
+  duracaoTiro: 1
 --- !u!1 &1733020840 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8226792899763766305, guid: f24ffbe4e2d8466449b7de6b368643ee, type: 3}

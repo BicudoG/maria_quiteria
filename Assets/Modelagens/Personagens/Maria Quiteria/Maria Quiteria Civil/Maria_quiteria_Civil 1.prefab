@@ -308,9 +308,6 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4451967518215520320}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 4542805624159933926}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
       insertIndex: -1
@@ -329,22 +326,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 722008bf0265fcc4286ca79e6a4955b4, type: 3}
   m_PrefabInstance: {fileID: 4821777529873366457}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &4451967518215520320
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5632609830108840168}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 964be605b7bb65448a3e4359745b5e0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  anda: 0
-  andaArma: 0
-  mirar: 0
-  atirou: 0
 --- !u!114 &4542805624159933926
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -357,6 +338,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab1e662155415294b995d8414d28b55b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  controller: {fileID: 0}
+  mariaCorpo: {fileID: 0}
   cam: {fileID: 9040952749424645186}
   moveSpeed: 6
   rotationSpeed: 5
@@ -412,3 +395,4 @@ MonoBehaviour:
     de mulher guerreira, ouvi?"
   falasGenericas: []
   conversaAliado: 
+  Manager1: {fileID: 0}

@@ -3,8 +3,8 @@
 [RequireComponent(typeof(CharacterController))]
 public class maria_quiteria : MonoBehaviour
 {
-    private CharacterController controller;
-    private Animator mariaCorpo;
+    public CharacterController controller;
+    public Animator mariaCorpo;
     public Camera cam;
 
     public float moveSpeed = 6f;

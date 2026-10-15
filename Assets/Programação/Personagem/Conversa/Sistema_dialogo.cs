@@ -10,26 +10,30 @@ public class Sistema_dialogo : MonoBehaviour
 
     [Header("Diálogos de Missão (Pai)")]
     [TextArea(2, 4)]
-    [SerializeField] private string[] falasMissao;          // Sequência completa da missão
+    [SerializeField] private string[] falasMissao;
 
     [Header("Diálogos de NPCs Genéricos")]
     [TextArea(2, 4)]
-    [SerializeField] private string[] falasGenericas;       // Falas aleatórias dos NPCs comuns
+    [SerializeField] private string[] falasGenericas;
 
     [Header("Diálogo do Aliado")]
     [TextArea(2, 4)]
     [SerializeField] private string conversaAliado;
 
+    [Header("Referências (opcional)")]
+    public missa1 Manager1;
+    public Manager1 top;
+
     // Encontrados automaticamente
     private GameObject fundoBranco;
     private TextMeshProUGUI texto;
-    public Manager1 Manager1;
+
     // Controle interno
     private int conversa = 0;
     private float falaTime = 0f;
     private bool emConversa = false;
     private bool jachamada = false;
-    private bool ehDialogoMissao = false;   // Controla se é diálogo de missão ou não
+    private bool ehDialogoMissao = false;
 
     private void Start()
     {
@@ -56,7 +60,6 @@ public class Sistema_dialogo : MonoBehaviour
         if (emConversa && ehDialogoMissao)
         {
             falaTime += Time.deltaTime;
-
             if (falaTime >= tempoEntreFalas)
             {
                 falaTime = 0f;
@@ -77,7 +80,6 @@ public class Sistema_dialogo : MonoBehaviour
         {
             Debug.Log($"Acertou: {hit.collider.name} | Tag: {hit.collider.tag}");
 
-            // NPC Genérico → fala aleatória
             if (hit.collider.CompareTag("NPC_Generico"))
             {
                 if (falasGenericas == null || falasGenericas.Length == 0)
@@ -89,7 +91,6 @@ public class Sistema_dialogo : MonoBehaviour
                 int index = Random.Range(0, falasGenericas.Length);
                 IniciarDialogoSimples(falasGenericas[index]);
             }
-            // NPC Aliado
             else if (hit.collider.CompareTag("NPC_Aliado") && !jachamada)
             {
                 Aliado_Ia aliado = hit.transform.GetComponent<Aliado_Ia>();
@@ -99,11 +100,8 @@ public class Sistema_dialogo : MonoBehaviour
                 jachamada = true;
                 IniciarDialogoSimples(conversaAliado);
             }
-            // Pai / Missão → sequência
-            else if (hit.collider.CompareTag("Pai"))
+            else if (hit.collider.CompareTag("Pai") || hit.collider.CompareTag("missao"))
             {
-                IniciarDialogoMissao();
-            }else if(hit.collider.CompareTag("missao")){
                 IniciarDialogoMissao();
             }
             else
@@ -117,7 +115,6 @@ public class Sistema_dialogo : MonoBehaviour
         }
     }
 
-    // Diálogo simples (fecha depois de um tempo ou pode ser fechado)
     private void IniciarDialogoSimples(string fala)
     {
         emConversa = true;
@@ -130,13 +127,18 @@ public class Sistema_dialogo : MonoBehaviour
         if (texto != null)
             texto.text = fala;
 
-        // Fecha automaticamente depois do tempo
         Invoke(nameof(FinalizarDialogo), tempoEntreFalas);
     }
 
-    // Diálogo de missão (sequência)
     private void IniciarDialogoMissao()
     {
+        // Tenta encontrar os scripts se não estiverem atribuídos
+        if (Manager1 == null)
+            Manager1 = FindFirstObjectByType<missa1>();
+
+        if (top == null)
+            top = FindFirstObjectByType<Manager1>();
+
         if (falasMissao == null || falasMissao.Length == 0)
         {
             Debug.LogWarning("Array de falas de missão está vazio!");
@@ -174,7 +176,6 @@ public class Sistema_dialogo : MonoBehaviour
 
     private void FinalizarDialogo()
     {
-        // Guarda se era missão antes de resetar
         bool eraMissao = ehDialogoMissao;
 
         emConversa = false;
@@ -188,22 +189,26 @@ public class Sistema_dialogo : MonoBehaviour
         if (texto != null)
             texto.text = "";
 
-        // Se era diálogo de missão, destroi o objeto com a tag "missao"
         if (eraMissao)
         {
-            if(Manager1 != null)
-            {
-                SceneManager.LoadScene("Tuturial");
-            }
+            // Destroi o objeto da missão
             GameObject objetoMissao = GameObject.FindWithTag("missao");
             if (objetoMissao != null)
             {
                 Destroy(objetoMissao);
                 Debug.Log("Objeto da missão destruído!");
             }
-            else
+
+            // Ativa o Manager1 se existir
+            if (top != null)
             {
-                Debug.LogWarning("Nenhum objeto com a tag 'missao' foi encontrado.");
+                top.Ativar();
+            }
+
+            // Carrega a próxima cena (se tiver o script missa1)
+            if (Manager1 != null)
+            {
+                SceneManager.LoadScene("Tuturial");
             }
         }
 
