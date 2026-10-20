@@ -18,10 +18,10 @@ public class Armas : MonoBehaviour
 
     [Header("Configurações de Ataque")]
     public float forcaDoArremesso = 10f;
-    [SerializeField] private float tempoEntreDisparos = 1.5f; // Tempo de espera para jogador e NPC
+    [SerializeField] private float tempoEntreDisparos = 1.5f;
 
     // Usado pelas IAs e pelo próprio script
-    [HideInInspector] public bool jaAtacou;
+    [HideInInspector] public bool jaAtacou = true; // começa travado
 
     private float tempoProximoAtaque;
 
@@ -30,33 +30,22 @@ public class Armas : MonoBehaviour
         if (anima == null)
             anima = GetComponent<sistema_Animacao>();
 
-        // Garante que o array tenha 3 posições
         if (armaAtual == null || armaAtual.Length < 3)
             armaAtual = new bool[3];
 
-        if (npc)
-        {
-            // NPC escolhe uma arma aleatória
-            int indiceAleatorio = Random.Range(0, armaAtual.Length);
-            DefinirArmaAtiva(indiceAleatorio);
-        }
-        else
-        {
-            // Jogador começa com a primeira arma se nenhuma estiver marcada
-            if (!armaAtual[0] && !armaAtual[1] && !armaAtual[2])
-                DefinirArmaAtiva(0);
-        }
+        // Garante que começa com uma arma ativa
+        if (!armaAtual[0] && !armaAtual[1] && !armaAtual[2])
+            DefinirArmaAtiva(0);
     }
 
     private void Update()
     {
-
-    
+        // Ainda está em cooldown? Não faz nada
         if (Time.time < tempoProximoAtaque) return;
 
         if (!npc)
         {
-            // === LÓGICA DO JOGADOR ===
+            // === JOGADOR ===
             if (Input.GetMouseButtonDown(0) && !jaAtacou)
             {
                 RealizarAtaque();
@@ -64,15 +53,18 @@ public class Armas : MonoBehaviour
         }
         else
         {
-            // === LÓGICA DO NPC ===
-            // O NPC ataca sempre que o tempo permitir
-            RealizarAtaque();
+            // === NPC ===
+            // Só atira quando a IA liberar (jaAtacou == false)
+            if (!jaAtacou)
+            {
+                RealizarAtaque();
+            }
         }
     }
 
     private void RealizarAtaque()
     {
-        jaAtacou = true;
+        jaAtacou = true; // trava novamente
         tempoProximoAtaque = Time.time + tempoEntreDisparos;
 
         if (anima != null)
@@ -80,8 +72,12 @@ public class Armas : MonoBehaviour
 
         Atacar();
 
-        // Libera a trava depois do tempo configurado
-        Invoke(nameof(ResetDisparo), tempoEntreDisparos);
+        // Apenas o jogador reseta a flag automaticamente
+        // O NPC é controlado pela IA (Aliado_Ia)
+        if (!npc)
+        {
+            Invoke(nameof(ResetDisparo), tempoEntreDisparos);
+        }
     }
 
     private void ResetDisparo()
@@ -109,12 +105,9 @@ public class Armas : MonoBehaviour
     private void Mosquete()
     {
         alcance = 55f;
-
         if (fonteMosquete == null || fonteMosquete.Length == 0) return;
 
         Transform pontoAtual = fonteMosquete[Random.Range(0, fonteMosquete.Length)];
-
-        // Usa a direção do personagem em vez da rotação do ponto
         Vector3 direcao = transform.forward;
 
         if (Physics.Raycast(pontoAtual.position, direcao, out RaycastHit hit, alcance))
@@ -125,14 +118,9 @@ public class Armas : MonoBehaviour
         Debug.DrawRay(pontoAtual.position, direcao * alcance, Color.red, 1f);
     }
 
-
-
-
-
     private void Blunderbuss()
     {
         alcance = 5f;
-
         if (fonte == null) return;
 
         Collider[] alvos = Physics.OverlapSphere(fonte.position, alcance);
@@ -169,7 +157,6 @@ public class Armas : MonoBehaviour
 
     private void AplicarDano(Collider colisor)
     {
-        // Tenta achar o script no próprio objeto ou no pai
         Sistema_Vida vidaAlvo = colisor.GetComponent<Sistema_Vida>();
         if (vidaAlvo == null)
             vidaAlvo = colisor.GetComponentInParent<Sistema_Vida>();
@@ -180,7 +167,7 @@ public class Armas : MonoBehaviour
             return;
         }
 
-        // Jogador ou NPC Aliado causando dano
+        // Jogador ou NPC Aliado
         if (!npc || gameObject.CompareTag("NPC_Aliado"))
         {
             if (colisor.CompareTag("Inimigo") || colisor.CompareTag("Maria_incompleta"))
@@ -188,12 +175,8 @@ public class Armas : MonoBehaviour
                 vidaAlvo.Vida -= 20;
                 Debug.Log("Dano aplicado! Vida restante: " + vidaAlvo.Vida);
             }
-            else
-            {
-                Debug.Log("Tag do alvo não é Inimigo nem Maria_incompleta → " + colisor.tag);
-            }
         }
-        // Inimigo causando dano
+        // Inimigo
         else if (gameObject.CompareTag("Inimigo"))
         {
             if (colisor.CompareTag("Player") || colisor.CompareTag("NPC_Aliado") || colisor.CompareTag("Maria_incompleta"))
@@ -201,21 +184,12 @@ public class Armas : MonoBehaviour
                 vidaAlvo.Vida -= 20;
                 Debug.Log("Dano aplicado pelo inimigo! Vida restante: " + vidaAlvo.Vida);
             }
-            else
-            {
-                Debug.Log("Tag do alvo não é válida para inimigo → " + colisor.tag);
-            }
-        }
-        else
-        {
-            Debug.Log("Quem atirou não tem tag correta. Tag atual: " + gameObject.tag);
         }
     }
 
     private void OnDrawGizmosSelected()
     {
         if (fonte == null) return;
-
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(fonte.position, alcance);
     }

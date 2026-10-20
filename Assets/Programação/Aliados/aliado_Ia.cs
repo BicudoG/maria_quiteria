@@ -1,179 +1,275 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 public class Aliado_Ia : MonoBehaviour
 {
-    public string nome;
+    [Header("ReferÃªncias")]
+    public string nomeJogador = "Player";
     public NavMeshAgent aliado;
-    public Transform jogador, inimigo;
-    public LayerMask cao, isJogador, isInimigo;
-    public Vector3 pontoDeCaminhada;
-    public bool pontoConferido;
-    public float raioPonto;
-    private float tempoProximaBusca = 0f;
+    public Transform jogador;
+    public Transform inimigo;
 
-    //ataque
-    public float tempoDoUltimoAtaque;
-    public bool jaAtacou, jaChamou;
-    public float alcansoAtaque, visaoalcance;
-    public bool jogadorNaVisao, jogadorNoalcance, inimigoNoAlcance, InimigoNaVisao;
+    [Header("Layers")]
+    public LayerMask layerChao;
+    public LayerMask layerJogador;
+    public LayerMask layerInimigo;
 
-    // Criado um temporizador real para o método ResetAttack funcionar
-    private float acumuladorTempo = 0f;
-    private sistema_Animacao scriptAnimacao;
+    [Header("Patrulha")]
+    public float raioPatrulha = 12f;
+    public float distanciaChegada = 1.3f;
+
+    [Header("Combate")]
+    public float alcanceAtaque = 8f;
+    public float alcanceVisao = 16f;
+    public float cooldownAtaque = 1.4f;
+
+    [Header("Estados")]
+    public bool jaChamou;
+
+    // Cache
+    private sistema_Animacao anim;
+    private Armas armas;
+
+    // Controle de tiro
+    private float proximoAtaque;
+    private float tempoAnimTiro;
+    private bool atirando;
+
+    // MÃ¡quina de estados simples
+    private enum Estado { Nenhum, Patrulhando, Seguindo, Parado, Atacando }
+    private Estado estadoAtual = Estado.Nenhum;
+
+    // Patrulha
+    private Vector3 pontoPatrulha;
+    private bool temPonto;
+
     private void Awake()
     {
-        scriptAnimacao = GetComponent<sistema_Animacao>();
-        GameObject objJogador = GameObject.Find(nome);
-        if (objJogador != null) jogador = objJogador.transform;
-
+        anim = GetComponent<sistema_Animacao>();
+        armas = GetComponent<Armas>();
         aliado = GetComponent<NavMeshAgent>();
-        GetComponent<Armas>();
 
-        // Busca o primeiro inimigo vivo logo no início do jogo
-        BuscarProximoInimigo();
+        GameObject playerObj = GameObject.Find(nomeJogador);
+        if (playerObj != null)
+            jogador = playerObj.transform;
     }
-
 
     private void Update()
     {
         if (aliado == null || !aliado.enabled) return;
 
-        // NOVO: Recalcula quem é o inimigo vivo mais próximo a cada meio segundo para focar no mais perto primeiro
-        if (Time.time >= tempoProximaBusca)
+        AtualizarAlvoInimigo();
+
+        bool temInimigoPerto = inimigo != null &&
+            (transform.position - inimigo.position).sqrMagnitude <= alcanceAtaque * alcanceAtaque;
+
+        bool temJogadorPerto = jogador != null &&
+            (transform.position - jogador.position).sqrMagnitude <= alcanceAtaque * alcanceAtaque;
+
+        // Prioridade de comportamentos
+        if (temInimigoPerto)
         {
-            tempoProximaBusca = Time.time + 0.5f;
-            BuscarProximoInimigo();
+            print("viinimigo");
+            MudarEstado(Estado.Atacando);
+            Atacar();
         }
-
-        jogadorNaVisao = Physics.CheckSphere(transform.position, visaoalcance, isJogador);
-        jogadorNoalcance = Physics.CheckSphere(transform.position, alcansoAtaque, isJogador);
-
-        // AJUSTADO: Evita checagens de esfera desnecessárias se não houver nenhum inimigo vivo na cena
-        inimigoNoAlcance = inimigo != null && Physics.CheckSphere(transform.position, alcansoAtaque, isInimigo);
-        InimigoNaVisao = inimigo != null && Physics.CheckSphere(transform.position, visaoalcance, isInimigo);
-
-        if (jaChamou)
+        else if (jaChamou && jogador != null)
         {
-            Seguindo();
+            MudarEstado(Estado.Seguindo);
+            Seguir();
         }
-
-        if (!jogadorNaVisao && !jogadorNoalcance) Patrulhando();
-        if (jogadorNaVisao && jogadorNoalcance) parado();
-
-        // CORRIGIDO: Executa a contagem do tempo frame a frame de forma contínua enquanto o aliado estiver esperando o reset do ataque
-        if (jaAtacou)
+        else if (temJogadorPerto)
         {
-            ContarTempoReset();
-        }
-    }
-
-    private void Patrulhando()
-    {
-        scriptAnimacao.anda = true;
-        scriptAnimacao.andaArma = false;
-        if (!pontoConferido) ProcurandoNovo();
-        if (pontoConferido == true)
-            aliado.SetDestination(pontoDeCaminhada);
-        Vector3 distanciaDeCaminhada = transform.position - pontoDeCaminhada;
-        if (distanciaDeCaminhada.magnitude < 1f)
-            pontoConferido = false;
-    }
-
-    private void ProcurandoNovo()
-    {
-        float ramdoZ = Random.Range(-raioPonto, raioPonto);
-        float ramdoX = Random.Range(-raioPonto, raioPonto);
-
-        pontoDeCaminhada = new Vector3(transform.position.x + ramdoX, transform.position.y, transform.position.z + ramdoZ);
-        if (Physics.Raycast(pontoDeCaminhada, -transform.up, 2f, cao))
-            pontoConferido = true;
-    }
-
-    void parado()
-    {
-        if (!inimigoNoAlcance)
-        {
-            scriptAnimacao.andaArma = true;
-            scriptAnimacao.anda = false;
-            scriptAnimacao.mirar = false;
-            aliado.SetDestination(transform.position);
-            if (jogador != null) transform.LookAt(jogador);
-        }
-
-        if (inimigoNoAlcance)
-        {
-            aliado.SetDestination(transform.position);
-            if (inimigo != null) transform.LookAt(inimigo);
-            scriptAnimacao.andaArma = false;
-            scriptAnimacao.mirar = true;
-            if (!jaAtacou)
-            {
-                Armas armas = GetComponent<Armas>();
-                jaAtacou = true;
-                scriptAnimacao.mirar = false;
-                scriptAnimacao.atirou = true;
-                if (armas != null) armas.jaAtacou = false;
-                acumuladorTempo = 0f;
-                Invoke(nameof(ResetAttack), tempoDoUltimoAtaque);
-            }
-        }
-    }
-
-    void Seguindo()
-    {
-        if (jogador != null) aliado.SetDestination(jogador.position);
-        scriptAnimacao.andaArma = true;
-        scriptAnimacao.anda = false;
-        scriptAnimacao.mirar = false;
-    }
-
-
-    private void ContarTempoReset()
-    {
-        acumuladorTempo += Time.deltaTime;
-    }
-
-    private void ResetAttack()
-    {
-        Armas armas = GetComponent<Armas>();
-
-        if (acumuladorTempo >= 6f)
-        {
-            jaAtacou = false;
-            scriptAnimacao.atirou = false;
-            if (armas != null) armas.jaAtacou = true;
+            MudarEstado(Estado.Parado);
+            FicarParado();
         }
         else
         {
-            Invoke(nameof(ResetAttack), 0.1f);
+            MudarEstado(Estado.Patrulhando);
+            Patrulhar();
+        }
+
+        // Reseta apenas a animaÃ§Ã£o de tiro
+        if (atirando && Time.time >= tempoAnimTiro)
+        {
+            atirando = false;
+            anim.atirou = false;
         }
     }
 
-    void BuscarProximoInimigo()
-    {
-        // Encontra todos os objetos com a tag "Inimigo" na cena
-        GameObject[] inimigosExistentes = GameObject.FindGameObjectsWithTag("Inimigo");
-        float menorDistancia = Mathf.Infinity;
-        Transform inimigoMaisProximo = null;
+    // ====================== COMPORTAMENTOS ======================
 
-        foreach (GameObject objInimigo in inimigosExistentes)
+    private void Atacar()
+    {
+        aliado.isStopped = true;
+
+        if (inimigo != null)
+            transform.LookAt(inimigo.position);
+
+        if (Time.time >= proximoAtaque)
         {
-            // Verifica se o inimigo tem o script Sistema_Vida e se ele ainda está VIVO
-            Sistema_Vida vidaInimigo = objInimigo.GetComponent<Sistema_Vida>();
-            if (vidaInimigo != null && vidaInimigo.Vida > 0)
+            // Libera o tiro no script Armas
+            if (armas != null)
+                armas.jaAtacou = false;
+
+            // AnimaÃ§Ã£o
+            anim.mirar = false;
+            anim.atirou = true;
+            atirando = true;
+            tempoAnimTiro = Time.time + 0.15f;
+
+            proximoAtaque = Time.time + cooldownAtaque;
+        }
+        else
+        {
+            if (!atirando)
             {
-                // Calcula a distância até este inimigo
-                float distancia = Vector3.Distance(transform.position, objInimigo.transform.position);
-                if (distancia < menorDistancia)
-                {
-                    menorDistancia = distancia;
-                    inimigoMaisProximo = objInimigo.transform;
-                }
+                anim.mirar = true;
+                anim.atirou = false;
+            }
+        }
+    }
+
+    private IEnumerator ResetarFlagArma()
+    {
+        yield return null; // espera exatamente 1 frame
+        if (armas != null)
+            armas.jaAtacou = true;
+    }
+
+    private void Seguir()
+    {
+        aliado.isStopped = false;
+        aliado.SetDestination(jogador.position);
+    }
+
+    private void FicarParado()
+    {
+        aliado.isStopped = true;
+
+        if (jogador != null)
+            transform.LookAt(jogador.position);
+    }
+
+    private void Patrulhar()
+    {
+        aliado.isStopped = false;
+
+        if (!temPonto)
+        {
+            if (GerarPontoPatrulha())
+                temPonto = true;
+            else
+                return;
+        }
+
+        aliado.SetDestination(pontoPatrulha);
+
+        if ((transform.position - pontoPatrulha).sqrMagnitude <= distanciaChegada * distanciaChegada)
+            temPonto = false;
+    }
+
+    // ====================== AUXILIARES ======================
+
+    private void AtualizarAlvoInimigo()
+    {
+        // SÃ³ procura novo inimigo se o atual morreu ou nÃ£o existe
+        if (inimigo != null)
+        {
+            Sistema_Vida vida = inimigo.GetComponent<Sistema_Vida>();
+            if (vida != null && vida.Vida > 0)
+                return;
+        }
+
+        GameObject[] todos = GameObject.FindGameObjectsWithTag("Inimigo");
+        float menorDistSq = float.MaxValue;
+        Transform melhor = null;
+        Vector3 minhaPos = transform.position;
+
+        for (int i = 0; i < todos.Length; i++)
+        {
+            Sistema_Vida vida = todos[i].GetComponent<Sistema_Vida>();
+            if (vida == null || vida.Vida <= 0) continue;
+
+            float distSq = (minhaPos - todos[i].transform.position).sqrMagnitude;
+            if (distSq < menorDistSq)
+            {
+                menorDistSq = distSq;
+                melhor = todos[i].transform;
             }
         }
 
-        // Define o alvo do aliado como o inimigo vivo mais próximo encontrado (ou null se todos morreram)
-        inimigo = inimigoMaisProximo;
+        inimigo = melhor;
+    }
+
+    private bool GerarPontoPatrulha()
+    {
+        Vector3 randomDir = Random.insideUnitSphere * raioPatrulha;
+        randomDir += transform.position;
+
+        if (NavMesh.SamplePosition(randomDir, out NavMeshHit hit, raioPatrulha, NavMesh.AllAreas))
+        {
+            pontoPatrulha = hit.position;
+            return true;
+        }
+        return false;
+    }
+
+    private void MudarEstado(Estado novo)
+    {
+        if (estadoAtual == novo) return;
+
+        estadoAtual = novo;
+
+        switch (novo)
+        {
+            case Estado.Patrulhando:
+                // Andando sem arma
+                anim.anda = true;
+                anim.andaArma = false;
+                anim.arma = true;          // â† sem arma
+                anim.mirar = false;
+                anim.atirou = false;
+                break;
+
+            case Estado.Seguindo:
+                // Andando com arma
+                anim.anda = true;
+                anim.andaArma = true;
+                anim.arma = true;           // â† com arma
+                anim.mirar = false;
+                anim.atirou = false;
+                break;
+
+            case Estado.Parado:
+                // Parado mirando
+                anim.anda = false;
+                anim.andaArma = false;
+                anim.arma = true;           // â† com arma
+                anim.mirar = true;
+                anim.atirou = false;
+                break;
+
+            case Estado.Atacando:
+                // Parado mirando / atirando
+                anim.anda = false;
+                anim.andaArma = false;
+                      
+                                            // mirar e atirou sÃ£o controlados no mÃ©todo Atacar()
+                break;
+        }
+    }
+
+    // ====================== MÃ‰TODOS PÃšBLICOS ======================
+
+    public void ChamarAliado()
+    {
+        jaChamou = true;
+    }
+
+    public void LiberarAliado()
+    {
+        jaChamou = false;
     }
 }

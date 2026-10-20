@@ -6,7 +6,7 @@ public class sistema_Animacao : MonoBehaviour
     public bool npc;
     public bool militar;
     public bool anda;
-    public bool andaArma;
+    public bool andaArma = true;
     public bool mirar;
     public bool atirou;
     public bool arma;
@@ -24,6 +24,21 @@ public class sistema_Animacao : MonoBehaviour
 
     void Update()
     {
+        if (!npc) { 
+        
+        float vertical = Input.GetAxis("Vertical");
+
+        // Se estiver pressionando W ou S, define 'anda' como true
+        if (vertical != 0)
+        {
+            anda = true;
+        }
+        else
+        {
+            anda = false;
+        }
+        }
+        
         if (animator == null) return;
 
         animator.SetBool("anda", anda);

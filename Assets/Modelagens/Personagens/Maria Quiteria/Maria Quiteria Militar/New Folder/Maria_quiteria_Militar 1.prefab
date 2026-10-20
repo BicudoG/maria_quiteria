@@ -84,7 +84,7 @@ GameObject:
   - component: {fileID: 9107052059557245314}
   - component: {fileID: 7096812944227895962}
   m_Layer: 0
-  m_Name: Maria_quiteria_Militar
+  m_Name: Maria_quiteria_Militar 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
