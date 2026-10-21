@@ -4,6 +4,11 @@ using System.Collections;
 
 public class Aliado_Ia : MonoBehaviour
 {
+    [Header("Missão")]
+    public string tagMissao = "missao";
+    public float distanciaMaximaDaMissao = 25f; // se ficar mais longe que isso, vai até a missão
+    private Transform pontoMissao;
+
     [Header("Referências")]
     public string nomeJogador = "Player";
     public NavMeshAgent aliado;
@@ -53,6 +58,9 @@ public class Aliado_Ia : MonoBehaviour
         GameObject playerObj = GameObject.Find(nomeJogador);
         if (playerObj != null)
             jogador = playerObj.transform;
+        GameObject missaoObj = GameObject.FindGameObjectWithTag(tagMissao);
+        if (missaoObj != null)
+            pontoMissao = missaoObj.transform;
     }
 
     private void Update()
@@ -114,6 +122,7 @@ public class Aliado_Ia : MonoBehaviour
                 armas.jaAtacou = false;
 
             // Animação
+            anim.arma = true;
             anim.mirar = false;
             anim.atirou = true;
             atirando = true;
@@ -141,7 +150,10 @@ public class Aliado_Ia : MonoBehaviour
     private void Seguir()
     {
         aliado.isStopped = false;
-        aliado.SetDestination(jogador.position);
+        aliado.stoppingDistance = 2.8f;   // ← distância que ele mantém de você (ajuste se quiser)
+
+        if (jogador != null)
+            aliado.SetDestination(jogador.position);
     }
 
     private void FicarParado()
@@ -154,11 +166,46 @@ public class Aliado_Ia : MonoBehaviour
 
     private void Patrulhar()
     {
+        // Se não encontrou a missão, faz patrulha normal no lugar
+        if (pontoMissao == null)
+        {
+            aliado.isStopped = false;
+
+            if (!temPonto)
+            {
+                if (GerarPontoPatrulha())
+                    temPonto = true;
+                else
+                    return;
+            }
+
+            aliado.SetDestination(pontoPatrulha);
+
+            if ((transform.position - pontoPatrulha).sqrMagnitude <= distanciaChegada * distanciaChegada)
+                temPonto = false;
+
+            return;
+        }
+
+        // ===== LÓGICA COM MISSÃO =====
+        float distSqMissao = (transform.position - pontoMissao.position).sqrMagnitude;
+        float maxDistSq = distanciaMaximaDaMissao * distanciaMaximaDaMissao;
+
+        // Está longe da missão? Vai até ela primeiro
+        if (distSqMissao > maxDistSq)
+        {
+            aliado.isStopped = false;
+            aliado.SetDestination(pontoMissao.position);
+            temPonto = false;
+            return;
+        }
+
+        // Está perto → patrulha ao redor da missão
         aliado.isStopped = false;
 
         if (!temPonto)
         {
-            if (GerarPontoPatrulha())
+            if (GerarPontoPatrulhaAoRedorDaMissao())
                 temPonto = true;
             else
                 return;
@@ -169,7 +216,6 @@ public class Aliado_Ia : MonoBehaviour
         if ((transform.position - pontoPatrulha).sqrMagnitude <= distanciaChegada * distanciaChegada)
             temPonto = false;
     }
-
     // ====================== AUXILIARES ======================
 
     private void AtualizarAlvoInimigo()
@@ -225,40 +271,54 @@ public class Aliado_Ia : MonoBehaviour
         switch (novo)
         {
             case Estado.Patrulhando:
-                // Andando sem arma
+                aliado.stoppingDistance = 0.5f;
                 anim.anda = true;
-                anim.andaArma = false;
-                anim.arma = true;          // ← sem arma
+                anim.andaArma = true;
+                anim.arma = true;
                 anim.mirar = false;
                 anim.atirou = false;
                 break;
 
             case Estado.Seguindo:
-                // Andando com arma
+                aliado.stoppingDistance = 2.8f;   // fica afastado de você
                 anim.anda = true;
                 anim.andaArma = true;
-                anim.arma = true;           // ← com arma
+                anim.arma = true;
                 anim.mirar = false;
                 anim.atirou = false;
                 break;
 
             case Estado.Parado:
-                // Parado mirando
+                aliado.stoppingDistance = 0.5f;
                 anim.anda = false;
                 anim.andaArma = false;
-                anim.arma = true;           // ← com arma
+                anim.arma = true;
                 anim.mirar = true;
                 anim.atirou = false;
                 break;
 
             case Estado.Atacando:
-                // Parado mirando / atirando
+                aliado.stoppingDistance = 0.5f;
                 anim.anda = false;
                 anim.andaArma = false;
-                      
-                                            // mirar e atirou são controlados no método Atacar()
+                anim.arma = true;
                 break;
         }
+    }
+    private bool GerarPontoPatrulhaAoRedorDaMissao()
+    {
+        if (pontoMissao == null) return false;
+
+        Vector3 randomDir = Random.insideUnitSphere * raioPatrulha;
+        randomDir.y = 0f;
+        Vector3 pontoTentativa = pontoMissao.position + randomDir;
+
+        if (NavMesh.SamplePosition(pontoTentativa, out NavMeshHit hit, raioPatrulha, NavMesh.AllAreas))
+        {
+            pontoPatrulha = hit.position;
+            return true;
+        }
+        return false;
     }
 
     // ====================== MÉTODOS PÚBLICOS ======================
