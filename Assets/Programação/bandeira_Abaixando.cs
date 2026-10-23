@@ -1,39 +1,53 @@
-using System.Collections.Generic;
+Ôªøusing System.Collections.Generic;
+using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 
 public class bandeira_Abaixando : MonoBehaviour
 {
     private List<Transform> alvosTransforms = new List<Transform>();
     private Transform jogadorTransform;
+    float contador;
 
     [Header("Bandeiras")]
     public Transform bandeiraPortuga;
     public Transform bandeiraBrasuca;
+    public GameObject manager;
+    public GameObject portuga;
+    public GameObject brasil;
+    public ProximaFase pro;
 
     [Header("Alturas")]
-    public float alturaAlta = 5f;   // altura m·xima (Y)
-    public float alturaBaixa = 0f;  // altura mÌnima (Y)
+    public float alturaAlta = -0.0011f;   // altura m√°xima (Y)
+    public float alturaBaixa = 0f;  // altura m√≠nima (Y)
 
-    [Header("DetecÁ„o")]
+    [Header("Detec√ß√£o")]
     public string tagDoJogador = "Player";
     public string tagInimigo = "Enemy"; // <-- mude para a tag correta
     public float distanciaLimite = 15f;
 
     [Header("Movimento")]
-    public float velocidade = 2f;
+    public float velocidade = 0.00001f;
 
     private bool temJogador;
     private bool temInimigo;
 
     void Start()
     {
+        // pro = GetComponent<ProximaFase>();  ‚Üê REMOVA ou comente esta linha
+
+        if (pro == null)
+            Debug.LogError("ProximaFase n√£o est√° atribu√≠do no Inspector!");
+
         BuscarAlvosNaCena();
+
+        if (brasil != null) brasil.SetActive(false);
+        if (portuga != null) portuga.SetActive(true);
 
         GameObject jogador = GameObject.FindWithTag(tagDoJogador);
         if (jogador != null)
             jogadorTransform = jogador.transform;
         else
-            Debug.LogError("Jogador n„o encontrado com a tag: " + tagDoJogador);
+            Debug.LogError("Jogador n√£o encontrado com a tag: " + tagDoJogador);
     }
 
     void BuscarAlvosNaCena()
@@ -68,25 +82,47 @@ public class bandeira_Abaixando : MonoBehaviour
             }
         }
 
-        // LÛgica da bandeira
+        // L√≥gica da bandeira
         if (temJogador && !temInimigo)
         {
+            brasil.SetActive(true);
+            Vector3 posP = bandeiraPortuga.localPosition;
+            posP.y = Mathf.MoveTowards(posP.y, alturaBaixa, velocidade * Time.deltaTime);
+            bandeiraPortuga.localPosition = posP;
             // Sobe a bandeira brasileira
+
             Vector3 pos = bandeiraBrasuca.localPosition;
             pos.y = Mathf.MoveTowards(pos.y, alturaAlta, velocidade * Time.deltaTime);
             bandeiraBrasuca.localPosition = pos;
 
-            // (Opcional) abaixa a portuguesa
-            // Vector3 posP = bandeiraPortuga.localPosition;
-            // posP.y = Mathf.MoveTowards(posP.y, alturaBaixa, velocidade * Time.deltaTime);
-            // bandeiraPortuga.localPosition = posP;
         }
         else
         {
-            // Volta para baixo quando n„o tem jogador ou tem inimigo
+            // Volta para baixo quando n√£o tem jogador ou tem inimigo
             Vector3 pos = bandeiraBrasuca.localPosition;
             pos.y = Mathf.MoveTowards(pos.y, alturaBaixa, velocidade * Time.deltaTime);
             bandeiraBrasuca.localPosition = pos;
         }
+
+        if (bandeiraBrasuca.localPosition.y >= alturaAlta - 0.01f)
+        {
+            if (portuga != null) portuga.SetActive(false);
+
+            contador += Time.deltaTime;
+
+            if (contador >= 20f)
+            {
+                if (pro != null)
+                    pro.Fase();
+
+                contador = 0f; // evita chamar v√°rias vezes
+            }
+        }
+        else
+        {
+            contador = 0f;
+        }
+
+
     }
 }

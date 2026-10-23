@@ -46,7 +46,7 @@ public class sistema_Animacao : MonoBehaviour
         if (npc || militar)
         {
             animator.SetBool("andaArma", andaArma);
-            animator.SetBool("arma", arma);
+            animator.SetBool("arma", arma); 
             animator.SetBool("mirar", mirar);
             animator.SetBool("atirar", atirou);
 

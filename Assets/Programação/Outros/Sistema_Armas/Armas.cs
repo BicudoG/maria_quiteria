@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class Armas : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class Armas : MonoBehaviour
     [Header("Referências")]
     [SerializeField] private Transform fonte;
     [SerializeField] private Transform[] fonteMosquete;
+    [SerializeField] private GameObject efeitoMosquetePrefab;   // ← Prefab do efeito de partícula
     [SerializeField] private GameObject bomba;
     [SerializeField] private sistema_Animacao anima;
 
@@ -20,9 +22,7 @@ public class Armas : MonoBehaviour
     public float forcaDoArremesso = 10f;
     [SerializeField] private float tempoEntreDisparos = 1.5f;
 
-    // Usado pelas IAs e pelo próprio script
-    [HideInInspector] public bool jaAtacou = true; // começa travado
-
+    [HideInInspector] public bool jaAtacou;
     private float tempoProximoAtaque;
 
     private void Awake()
@@ -33,19 +33,16 @@ public class Armas : MonoBehaviour
         if (armaAtual == null || armaAtual.Length < 3)
             armaAtual = new bool[3];
 
-        // Garante que começa com uma arma ativa
         if (!armaAtual[0] && !armaAtual[1] && !armaAtual[2])
             DefinirArmaAtiva(0);
     }
 
     private void Update()
     {
-        // Ainda está em cooldown? Não faz nada
         if (Time.time < tempoProximoAtaque) return;
 
         if (!npc)
         {
-            // === JOGADOR ===
             if (Input.GetMouseButtonDown(0) && !jaAtacou)
             {
                 RealizarAtaque();
@@ -53,8 +50,6 @@ public class Armas : MonoBehaviour
         }
         else
         {
-            // === NPC ===
-            // Só atira quando a IA liberar (jaAtacou == false)
             if (!jaAtacou)
             {
                 RealizarAtaque();
@@ -64,7 +59,7 @@ public class Armas : MonoBehaviour
 
     private void RealizarAtaque()
     {
-        jaAtacou = true; // trava novamente
+        jaAtacou = true;
         tempoProximoAtaque = Time.time + tempoEntreDisparos;
 
         if (anima != null)
@@ -72,8 +67,6 @@ public class Armas : MonoBehaviour
 
         Atacar();
 
-        // Apenas o jogador reseta a flag automaticamente
-        // O NPC é controlado pela IA (Aliado_Ia)
         if (!npc)
         {
             Invoke(nameof(ResetDisparo), tempoEntreDisparos);
@@ -100,16 +93,36 @@ public class Armas : MonoBehaviour
         else if (armaAtual[2]) HandMortar();
     }
 
-    // ==================== ARMAS ====================
+    // ==================== SISTEMA DE PARTÍCULA (usando Prefab) ====================
+    private void TocarEfeitoNaBoca(Transform bocaDaArma)
+    {
+        if (efeitoMosquetePrefab == null || bocaDaArma == null) return;
 
+        // Cria uma instância do Prefab na posição e rotação da boca da arma
+        GameObject efeito = Instantiate(efeitoMosquetePrefab, bocaDaArma.position, transform.rotation);
+
+        // Pega o ParticleSystem e dá Play
+        ParticleSystem ps = efeito.GetComponent<ParticleSystem>();
+        if (ps != null)
+        {
+            ps.Play();
+        }
+
+        // Destrói o efeito depois de alguns segundos (ajuste o tempo se necessário)
+        Destroy(efeito, 3f);
+    }
+
+    // ==================== ARMAS ====================
     private void Mosquete()
     {
         alcance = 55f;
         if (fonteMosquete == null || fonteMosquete.Length == 0) return;
 
-        Transform pontoAtual = fonteMosquete[Random.Range(0, fonteMosquete.Length)];
-        Vector3 direcao = transform.forward;
+        Transform pontoAtual = fonteMosquete[0];
 
+        TocarEfeitoNaBoca(pontoAtual);
+
+        Vector3 direcao = transform.forward;
         if (Physics.Raycast(pontoAtual.position, direcao, out RaycastHit hit, alcance))
         {
             AplicarDano(hit.collider);
@@ -123,8 +136,9 @@ public class Armas : MonoBehaviour
         alcance = 5f;
         if (fonte == null) return;
 
-        Collider[] alvos = Physics.OverlapSphere(fonte.position, alcance);
+        TocarEfeitoNaBoca(fonte);
 
+        Collider[] alvos = Physics.OverlapSphere(fonte.position, alcance);
         foreach (var colisor in alvos)
         {
             if (colisor.gameObject == gameObject) continue;
@@ -143,9 +157,10 @@ public class Armas : MonoBehaviour
     {
         if (fonteMosquete == null || fonteMosquete.Length == 0 || bomba == null) return;
 
+        TocarEfeitoNaBoca(fonteMosquete[0]);
+
         GameObject novaBomba = Instantiate(bomba, fonteMosquete[0].position, fonteMosquete[0].rotation);
         Rigidbody rb = novaBomba.GetComponent<Rigidbody>();
-
         if (rb != null)
         {
             Vector3 direcao = fonteMosquete[0].forward + Vector3.up * 0.5f;
@@ -154,7 +169,6 @@ public class Armas : MonoBehaviour
     }
 
     // ==================== DANO ====================
-
     private void AplicarDano(Collider colisor)
     {
         Sistema_Vida vidaAlvo = colisor.GetComponent<Sistema_Vida>();
@@ -167,7 +181,6 @@ public class Armas : MonoBehaviour
             return;
         }
 
-        // Jogador ou NPC Aliado
         if (!npc || gameObject.CompareTag("NPC_Aliado"))
         {
             if (colisor.CompareTag("Inimigo") || colisor.CompareTag("Maria_incompleta"))
@@ -176,7 +189,6 @@ public class Armas : MonoBehaviour
                 Debug.Log("Dano aplicado! Vida restante: " + vidaAlvo.Vida);
             }
         }
-        // Inimigo
         else if (gameObject.CompareTag("Inimigo"))
         {
             if (colisor.CompareTag("Player") || colisor.CompareTag("NPC_Aliado") || colisor.CompareTag("Maria_incompleta"))

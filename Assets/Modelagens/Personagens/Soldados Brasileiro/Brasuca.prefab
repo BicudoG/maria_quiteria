@@ -3000,6 +3000,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd528bc34f06e7b4eb42f94f1e767025, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tagMissao: missao
+  distanciaMaximaDaMissao: 25
   nomeJogador: Maria_quiteria_Civil
   aliado: {fileID: 8213635509492262296, guid: 52560da360ad690448d9f0cf3057f8a4, type: 3}
   jogador: {fileID: 0}
@@ -3099,6 +3101,7 @@ MonoBehaviour:
   fonte: {fileID: 9114963920960366169}
   fonteMosquete:
   - {fileID: 1193889638960380805}
+  efeitoMosquetePrefab: {fileID: 3640573473866782102, guid: 861bd834706731f47a0a3b2b4451d518, type: 3}
   bomba: {fileID: 5040460460557987684, guid: a88b0023a38bfa44982c85b08c59a1fb, type: 3}
   anima: {fileID: 4729911490114576354}
   forcaDoArremesso: 20

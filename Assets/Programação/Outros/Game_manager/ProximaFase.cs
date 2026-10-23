@@ -4,14 +4,17 @@ using UnityEngine.SceneManagement;
 public class ProximaFase : MonoBehaviour
 {
     [Header("Nome da próxima cena")]
-    public string nomeDaProximaFase = "Fase2"; // Coloque o nome exato da cena aqui
+    public string nomeDaproximaFase = "Fase2";
 
     private void OnTriggerEnter(Collider other)
     {
-       
+     
+            SceneManager.LoadScene(nomeDaproximaFase);
         
-            // Carrega a próxima fase
-            SceneManager.LoadScene(nomeDaProximaFase);
-        
+    }
+
+    public void Fase()
+    {
+        SceneManager.LoadScene(nomeDaproximaFase);
     }
 }
