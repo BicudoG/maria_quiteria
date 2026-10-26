@@ -159,11 +159,15 @@ public class Armas : MonoBehaviour
 
         TocarEfeitoNaBoca(fonteMosquete[0]);
 
+        // Pega a posição local do ponto de origem
+        Vector3 posicaoLocal = fonteMosquete[0].localPosition;
+
         GameObject novaBomba = Instantiate(bomba, fonteMosquete[0].position, fonteMosquete[0].rotation);
         Rigidbody rb = novaBomba.GetComponent<Rigidbody>();
+
         if (rb != null)
         {
-            Vector3 direcao = fonteMosquete[0].forward + Vector3.up * 0.5f;
+            Vector3 direcao = fonteMosquete[0].forward;
             rb.AddForce(direcao * forcaDoArremesso, ForceMode.Impulse);
         }
     }

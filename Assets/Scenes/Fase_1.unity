@@ -2345,7 +2345,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e196f0923b213da4089feb69ad68ce3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nomeDaproximaFase: Fase2
+  nomeDaproximaFase: Fase_2
 --- !u!1001 &1592125554
 PrefabInstance:
   m_ObjectHideFlags: 0

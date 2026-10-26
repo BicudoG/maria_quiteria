@@ -6452,7 +6452,8 @@ MonoBehaviour:
   falasMissao: []
   falasGenericas: []
   conversaAliado: 
-  Manager1: {fileID: 0}
+  Manager1: {fileID: 198274624}
+  top: {fileID: 0}
 --- !u!4 &1600580327
 Transform:
   m_ObjectHideFlags: 0
