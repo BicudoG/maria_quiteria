@@ -8,6 +8,8 @@ public class Pai_IA : MonoBehaviour
     [Header("Referências")]
     public Transform player;                    // Arraste o Player aqui
     public Transform[] patrolPoints;            // Pontos de patrulha
+    public Derrota fim;
+    public GameObject teladofim;
 
     [Header("Campo de Visão")]
     [Range(1, 180)]
@@ -154,6 +156,8 @@ public class Pai_IA : MonoBehaviour
         if (canSeePlayer)
         {
             timeSinceLastSeen = 0f;
+            teladofim.SetActive(true);
+            fim.Pause();
         }
         else
         {

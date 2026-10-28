@@ -9,6 +9,9 @@ public class Sistema_Vida : MonoBehaviour
     public bool jogador;
     public int Vida;
     private bool estaMorto = false;
+
+    public GameObject telaFim;
+    public Derrota fim;
     private void Awake()
     {
         if (CompareTag("Inimigo")) inimigo = true;
@@ -29,6 +32,11 @@ public class Sistema_Vida : MonoBehaviour
     {
         Vida = 0;
         estaMorto = true;
+        if (jogador)
+        {
+            telaFim.SetActive(true);
+            fim.Pause();
+        }
         // Desativa os componentes de inteligência artificial
         if (inimigo)
         {
