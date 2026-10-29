@@ -31,7 +31,7 @@ public class bomba : MonoBehaviour
                 quantidadeAtingida++;
             }
         }
-
+        Destroy(gameObject);
         Debug.Log($"Dano de 100 aplicado em {quantidadeAtingida} objetos próximos");
     }
 }
